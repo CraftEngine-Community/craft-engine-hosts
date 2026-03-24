@@ -1,13 +1,12 @@
 package cn.gtemc.craftengine.hosts.impl;
 
-import cn.gtemc.craftengine.CraftengineHosts;
+import cn.gtemc.craftengine.CraftEngineHosts;
 import cn.gtemc.craftengine.hosts.ResourcePackHosts;
 import cn.gtemc.craftengine.util.GsonHelper;
 import cn.gtemc.craftengine.util.HashUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import net.momirealms.craftengine.core.pack.host.ResourcePackDownloadData;
 import net.momirealms.craftengine.core.pack.host.ResourcePackHost;
 import net.momirealms.craftengine.core.pack.host.ResourcePackHostFactory;
@@ -16,7 +15,6 @@ import net.momirealms.craftengine.core.plugin.config.ConfigSection;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -28,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 public class PolymathHost implements ResourcePackHost {
     public static final ResourcePackHostFactory<PolymathHost> FACTORY = new Factory();
@@ -46,21 +45,17 @@ public class PolymathHost implements ResourcePackHost {
     }
 
     private void readCacheFromDisk() {
-        Path cachePath = CraftengineHosts.instance().dataFolderPath().resolve("cache").resolve("polymath.json");
+        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("polymath.json");
         if (!Files.exists(cachePath) || !Files.isRegularFile(cachePath)) return;
 
         try (InputStream is = Files.newInputStream(cachePath)) {
-            Map<String, String> cache = GsonHelper.get().fromJson(
-                    new InputStreamReader(is),
-                    new TypeToken<Map<String, String>>(){}.getType()
-            );
+            Map<String, String> cache = GsonHelper.parseJson(is);
 
             this.sha1 = cache.get("sha1");
             this.uuid = generateUUID(this.sha1);
             this.url = cache.get("url");
         } catch (Exception e) {
-            CraftengineHosts.instance().getLogger().warning(
-                    "[Polymath] Failed to load cache from disk: " + e.getMessage());
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Polymath] Failed to load cache from disk", e);
         }
     }
 
@@ -68,33 +63,30 @@ public class PolymathHost implements ResourcePackHost {
         Map<String, String> cache = new HashMap<>();
         cache.put("sha1", this.sha1 != null ? this.sha1 : "");
         cache.put("url", this.url != null ? this.url : "");
-        Path cachePath = CraftengineHosts.instance().dataFolderPath().resolve("cache").resolve("polymath.json");
+        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("polymath.json");
         try {
             Files.createDirectories(cachePath.getParent());
             Files.writeString(
                     cachePath,
-                    GsonHelper.get().toJson(cache),
+                    GsonHelper.toJson(cache),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING
             );
         } catch (IOException e) {
-            CraftengineHosts.instance().getLogger().warning(
-                    "[Polymath] Failed to persist cache to disk: " + e.getMessage());
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Polymath] Failed to persist cache to disk", e);
         }
     }
 
     @Override
     public CompletableFuture<List<ResourcePackDownloadData>> requestResourcePackDownloadLink(UUID player) {
-        return CompletableFuture.completedFuture(List.of(ResourcePackDownloadData.of(
-                this.url, this.uuid, this.sha1
-        )));
+        return CompletableFuture.completedFuture(List.of(ResourcePackDownloadData.of(this.url, this.uuid, this.sha1)));
     }
 
     @Override
     public CompletableFuture<Void> upload(Path resourcePackPath) {
         return CompletableFuture.runAsync(() -> {
             long uploadStart = System.currentTimeMillis();
-            CraftengineHosts.instance().getLogger().info("[Polymath] Uploading resource pack...");
+            CraftEngineHosts.instance().getLogger().info("[Polymath] Uploading resource pack...");
             try {
                 this.sha1 = HashUtils.calculateLocalFileSha1(resourcePackPath);
                 this.uuid = generateUUID(this.sha1);
@@ -112,11 +104,9 @@ public class PolymathHost implements ResourcePackHost {
                 this.url = responseJson.get("url").getAsString();
                 this.saveCacheToDisk();
                 long uploadTime = System.currentTimeMillis() - uploadStart;
-                CraftengineHosts.instance().getLogger().info(String.format(
-                        "[Polymath] Upload request completed in %sms", uploadTime
-                ));
+                CraftEngineHosts.instance().getLogger().info(String.format("[Polymath] Upload request completed in %sms", uploadTime));
             } catch (IOException | JsonSyntaxException  | InterruptedException e) {
-                CraftengineHosts.instance().getLogger().warning("[Polymath] Error during upload: " + e.getMessage());
+                CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Polymath] Error during upload", e);
                 throw new RuntimeException(e);
             }
         });

@@ -5,9 +5,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.Level;
 
-public final class CraftengineHosts extends JavaPlugin {
-    private static CraftengineHosts instance;
+public final class CraftEngineHosts extends JavaPlugin {
+    private static CraftEngineHosts instance;
 
     @Override
     public void onLoad() {
@@ -22,13 +23,13 @@ public final class CraftengineHosts extends JavaPlugin {
             try {
                 Files.createDirectories(path);
             } catch (Exception e) {
-                this.getLogger().warning("Failed to create data folder: " + e.getMessage());
+                this.getLogger().log(Level.WARNING, "Failed to create data folder", e);
             }
         }
         return path;
     }
 
-    public static CraftengineHosts instance() {
+    public static CraftEngineHosts instance() {
         return instance;
     }
 }

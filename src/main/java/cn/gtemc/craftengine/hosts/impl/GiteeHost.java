@@ -1,12 +1,11 @@
 package cn.gtemc.craftengine.hosts.impl;
 
-import cn.gtemc.craftengine.CraftengineHosts;
+import cn.gtemc.craftengine.CraftEngineHosts;
 import cn.gtemc.craftengine.hosts.ResourcePackHosts;
 import cn.gtemc.craftengine.util.GsonHelper;
 import cn.gtemc.craftengine.util.HashUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import net.momirealms.craftengine.core.pack.host.ResourcePackDownloadData;
 import net.momirealms.craftengine.core.pack.host.ResourcePackHost;
 import net.momirealms.craftengine.core.pack.host.ResourcePackHostFactory;
@@ -15,7 +14,6 @@ import net.momirealms.craftengine.core.plugin.config.ConfigSection;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 public class GiteeHost implements ResourcePackHost {
     public static final ResourcePackHostFactory<GiteeHost> FACTORY = new Factory();
@@ -55,12 +54,13 @@ public class GiteeHost implements ResourcePackHost {
         )));
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Override
     public CompletableFuture<Void> upload(Path resourcePackPath) {
         return CompletableFuture.runAsync(() -> {
             try {
                 long uploadStart = System.currentTimeMillis();
-                CraftengineHosts.instance().getLogger().info("[Gitee] Uploading resource pack...");
+                CraftEngineHosts.instance().getLogger().info("[Gitee] Uploading resource pack...");
                 this.cachedSha1 = HashUtils.calculateLocalFileSha1(resourcePackPath);
                 this.saveCacheToDisk();
 
@@ -109,36 +109,29 @@ public class GiteeHost implements ResourcePackHost {
                     saveCacheToDisk();
 
                     long uploadTime = System.currentTimeMillis() - uploadStart;
-                    CraftengineHosts.instance().getLogger().info(String.format(
-                            "[Gitee] Upload request completed in %sms", uploadTime
-                    ));
+                    CraftEngineHosts.instance().getLogger().info(String.format("[Gitee] Upload request completed in %s ms", uploadTime));
                 } else {
-                    CraftengineHosts.instance().getLogger().warning("[Gitee] Upload failed with status " +
-                            uploadResponse.statusCode() + ": " + uploadResponse.body());
+                    CraftEngineHosts.instance().getLogger().warning("[Gitee] Upload failed with status " + uploadResponse.statusCode() + ": " + uploadResponse.body());
                     throw new RuntimeException("Upload failed with status " + uploadResponse.statusCode());
                 }
             } catch (IOException | InterruptedException e) {
-                CraftengineHosts.instance().getLogger().warning("[Gitee] Error during upload: " + e.getMessage());
+                CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Gitee] Error during upload: ", e);
                 throw new RuntimeException(e);
             }
         });
     }
 
     private void readCacheFromDisk() {
-        Path cachePath = CraftengineHosts.instance().dataFolderPath().resolve("cache").resolve("gitee.json");
+        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("gitee.json");
         if (!Files.exists(cachePath) || !Files.isRegularFile(cachePath)) return;
 
         try (InputStream is = Files.newInputStream(cachePath)) {
-            Map<String, String> cache = GsonHelper.get().fromJson(
-                    new InputStreamReader(is),
-                    new TypeToken<Map<String, String>>(){}.getType()
-            );
+            Map<String, String> cache = GsonHelper.parseJson(is);
 
             this.cachedSha1 = cache.get("sha1");
             this.downloadUrl = cache.get("download_url");
         } catch (Exception e) {
-            CraftengineHosts.instance().getLogger().warning(
-                    "[Gitee] Failed to load cache from disk: " + e.getMessage());
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Gitee] Failed to load cache from disk", e);
         }
     }
 
@@ -146,18 +139,17 @@ public class GiteeHost implements ResourcePackHost {
         Map<String, String> cache = new HashMap<>();
         cache.put("sha1", this.cachedSha1 != null ? this.cachedSha1 : "");
         cache.put("download_url", this.downloadUrl != null ? this.downloadUrl : "");
-        Path cachePath = CraftengineHosts.instance().dataFolderPath().resolve("cache").resolve("gitee.json");
+        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("gitee.json");
         try {
             Files.createDirectories(cachePath.getParent());
             Files.writeString(
                     cachePath,
-                    GsonHelper.get().toJson(cache),
+                    GsonHelper.toJson(cache),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING
             );
         } catch (IOException e) {
-            CraftengineHosts.instance().getLogger().warning(
-                    "[Gitee] Failed to persist cache to disk: " + e.getMessage());
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Gitee] Failed to persist cache to disk", e);
         }
     }
 
