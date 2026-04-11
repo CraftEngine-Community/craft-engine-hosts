@@ -58,8 +58,6 @@ public final class GitHubHost implements ResourcePackHost {
     public CompletableFuture<Void> upload(Path resourcePackPath) {
         return CompletableFuture.runAsync(() -> {
             try {
-                long uploadStart = System.currentTimeMillis();
-                CraftEngineHosts.instance().getLogger().info("[GitHub] Uploading resource pack...");
                 this.cachedSha1 = HashUtils.calculateLocalFileSha1(resourcePackPath);
                 this.saveCacheToDisk();
 
@@ -109,15 +107,10 @@ public final class GitHubHost implements ResourcePackHost {
                     JsonObject responseJson = JsonParser.parseString(uploadResponse.body()).getAsJsonObject();
                     this.downloadUrl = responseJson.get("content").getAsJsonObject().get("download_url").getAsString();
                     saveCacheToDisk();
-
-                    long uploadTime = System.currentTimeMillis() - uploadStart;
-                    CraftEngineHosts.instance().getLogger().info(String.format("[GitHub] Upload request completed in %sms", uploadTime));
                 } else {
-                    CraftEngineHosts.instance().getLogger().warning("[GitHub] Upload failed with status " + uploadResponse.statusCode() + ": " + uploadResponse.body());
                     throw new RuntimeException("Upload failed with status " + uploadResponse.statusCode());
                 }
             } catch (IOException | InterruptedException e) {
-                CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[GitHub] Error during upload", e);
                 throw new RuntimeException(e);
             }
         });
@@ -132,7 +125,7 @@ public final class GitHubHost implements ResourcePackHost {
             this.cachedSha1 = cache.get("sha1");
             this.downloadUrl = cache.get("download_url");
         } catch (Exception e) {
-            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[GitHub] Failed to load cache from disk", e);
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "Failed to load GitHub cache disk", e);
         }
     }
 
@@ -149,7 +142,7 @@ public final class GitHubHost implements ResourcePackHost {
                     StandardOpenOption.TRUNCATE_EXISTING
             );
         } catch (IOException e) {
-            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[GitHub] Failed to persist cache to disk", e);
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "Failed to persist GitHub cache", e);
         }
     }
 

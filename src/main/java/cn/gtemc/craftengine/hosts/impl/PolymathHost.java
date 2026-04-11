@@ -50,7 +50,7 @@ public final class PolymathHost implements ResourcePackHost {
             this.uuid = generateUUID(this.sha1);
             this.url = cache.get("url");
         } catch (Exception e) {
-            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Polymath] Failed to load cache from disk", e);
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "Failed to load Polymath cache disk", e);
         }
     }
 
@@ -67,7 +67,7 @@ public final class PolymathHost implements ResourcePackHost {
                     StandardOpenOption.TRUNCATE_EXISTING
             );
         } catch (IOException e) {
-            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Polymath] Failed to persist cache to disk", e);
+            CraftEngineHosts.instance().getLogger().log(Level.WARNING, "Failed to persist Polymath cache", e);
         }
     }
 
@@ -79,8 +79,6 @@ public final class PolymathHost implements ResourcePackHost {
     @Override
     public CompletableFuture<Void> upload(Path resourcePackPath) {
         return CompletableFuture.runAsync(() -> {
-            long uploadStart = System.currentTimeMillis();
-            CraftEngineHosts.instance().getLogger().info("[Polymath] Uploading resource pack...");
             try {
                 this.sha1 = HashUtils.calculateLocalFileSha1(resourcePackPath);
                 this.uuid = generateUUID(this.sha1);
@@ -97,10 +95,7 @@ public final class PolymathHost implements ResourcePackHost {
                 JsonObject responseJson = JsonParser.parseString(response.body()).getAsJsonObject();
                 this.url = responseJson.get("url").getAsString();
                 this.saveCacheToDisk();
-                long uploadTime = System.currentTimeMillis() - uploadStart;
-                CraftEngineHosts.instance().getLogger().info(String.format("[Polymath] Upload request completed in %sms", uploadTime));
             } catch (IOException | JsonSyntaxException  | InterruptedException e) {
-                CraftEngineHosts.instance().getLogger().log(Level.WARNING, "[Polymath] Error during upload", e);
                 throw new RuntimeException(e);
             }
         });
