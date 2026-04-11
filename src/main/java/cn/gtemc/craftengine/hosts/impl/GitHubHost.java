@@ -6,18 +6,13 @@ import cn.gtemc.craftengine.util.GsonHelper;
 import cn.gtemc.craftengine.util.HashUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.momirealms.craftengine.core.pack.host.ResourcePackDownloadData;
-import net.momirealms.craftengine.core.pack.host.ResourcePackHost;
-import net.momirealms.craftengine.core.pack.host.ResourcePackHostFactory;
-import net.momirealms.craftengine.core.pack.host.ResourcePackHostType;
+import net.momirealms.craftengine.core.pack.host.*;
 import net.momirealms.craftengine.core.plugin.config.ConfigSection;
 import net.momirealms.craftengine.core.plugin.config.ConfigValue;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ProxySelector;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -36,17 +31,15 @@ public class GitHubHost implements ResourcePackHost {
     private final String token;
     private final String branch;
     private final String uploadPath;
-    private final HttpClient httpClient;
     private String cachedSha1;
     private String downloadUrl;
 
-    public GitHubHost(String owner, String repo, String token, String branch, String uploadPath, ProxySelector proxy) {
+    public GitHubHost(String owner, String repo, String token, String branch, String uploadPath) {
         this.owner = owner;
         this.repo = repo;
         this.token = token;
         this.branch = branch;
         this.uploadPath = uploadPath;
-        this.httpClient = HttpClient.newBuilder().proxy(proxy).build();
         this.readCacheFromDisk();
     }
 
@@ -78,7 +71,7 @@ public class GitHubHost implements ResourcePackHost {
                         .GET()
                         .build();
 
-                HttpResponse<String> checkResponse = httpClient.send(checkRequest, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> checkResponse = HttpClientManager.get().send(checkRequest, HttpResponse.BodyHandlers.ofString());
 
                 if (checkResponse.statusCode() == 200) {
                     JsonObject existingFile = JsonParser.parseString(checkResponse.body()).getAsJsonObject();
@@ -107,7 +100,7 @@ public class GitHubHost implements ResourcePackHost {
                         .PUT(HttpRequest.BodyPublishers.ofString(uploadBody.toString()))
                         .build();
 
-                HttpResponse<String> uploadResponse = httpClient.send(uploadRequest, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> uploadResponse = HttpClientManager.get().send(uploadRequest, HttpResponse.BodyHandlers.ofString());
 
                 if (uploadResponse.statusCode() == 200 || uploadResponse.statusCode() == 201) {
                     JsonObject responseJson = JsonParser.parseString(uploadResponse.body()).getAsJsonObject();
@@ -180,8 +173,7 @@ public class GitHubHost implements ResourcePackHost {
             String token = useEnv ? getNonNullEnvironmentVariable(section, "CE_GITHUB_TOKEN") : section.getNonEmptyString("token");
             String branch = section.getValue("branch", ConfigValue::getAsNonEmptyString, "main");
             String uploadPath = section.getNonEmptyString("path");
-            ProxySelector proxy = getProxySelector(section.getSection("proxy"));
-            return new GitHubHost(owner, repo, token, branch, uploadPath, proxy);
+            return new GitHubHost(owner, repo, token, branch, uploadPath);
         }
     }
 }

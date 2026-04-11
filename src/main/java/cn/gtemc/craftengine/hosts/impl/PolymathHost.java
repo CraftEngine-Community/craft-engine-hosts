@@ -7,17 +7,12 @@ import cn.gtemc.craftengine.util.HashUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import net.momirealms.craftengine.core.pack.host.ResourcePackDownloadData;
-import net.momirealms.craftengine.core.pack.host.ResourcePackHost;
-import net.momirealms.craftengine.core.pack.host.ResourcePackHostFactory;
-import net.momirealms.craftengine.core.pack.host.ResourcePackHostType;
+import net.momirealms.craftengine.core.pack.host.*;
 import net.momirealms.craftengine.core.plugin.config.ConfigSection;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.ProxySelector;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -32,15 +27,13 @@ public class PolymathHost implements ResourcePackHost {
     public static final ResourcePackHostFactory<PolymathHost> FACTORY = new Factory();
     private final String serverUrl;
     private final String secret;
-    private final HttpClient httpClient;
     private String sha1;
     private String url;
     private UUID uuid;
 
-    public PolymathHost(String serverUrl, String secret, ProxySelector proxy) {
+    public PolymathHost(String serverUrl, String secret) {
         this.serverUrl = serverUrl;
         this.secret = secret;
-        this.httpClient = HttpClient.newBuilder().proxy(proxy).build();
         this.readCacheFromDisk();
     }
 
@@ -99,7 +92,7 @@ public class PolymathHost implements ResourcePackHost {
                         .POST(buildMultipartBody(resourcePackPath, boundary))
                         .build();
 
-                HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> response = HttpClientManager.get().send(request, HttpResponse.BodyHandlers.ofString());
                 JsonObject responseJson = JsonParser.parseString(response.body()).getAsJsonObject();
                 this.url = responseJson.get("url").getAsString();
                 this.saveCacheToDisk();
@@ -160,8 +153,7 @@ public class PolymathHost implements ResourcePackHost {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String serverUrl = section.getNonEmptyString(SERVER_URL);
             String secret = useEnv ? getNonNullEnvironmentVariable(section, "CE_POLYMATH_SECRET") : section.getNonEmptyString("secret");
-            ProxySelector proxy = getProxySelector(section.getSection("proxy"));
-            return new PolymathHost(serverUrl, secret, proxy);
+            return new PolymathHost(serverUrl, secret);
         }
     }
 }
