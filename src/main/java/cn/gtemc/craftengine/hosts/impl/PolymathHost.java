@@ -23,25 +23,26 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
-public class PolymathHost implements ResourcePackHost {
+public final class PolymathHost implements ResourcePackHost {
     public static final ResourcePackHostFactory<PolymathHost> FACTORY = new Factory();
     private final String serverUrl;
     private final String secret;
+    private final Path cacheFilePath;
     private String sha1;
     private String url;
     private UUID uuid;
 
-    public PolymathHost(String serverUrl, String secret) {
+    private PolymathHost(String serverUrl, String secret, Path cacheFilePath) {
         this.serverUrl = serverUrl;
         this.secret = secret;
+        this.cacheFilePath = cacheFilePath;
         this.readCacheFromDisk();
     }
 
     private void readCacheFromDisk() {
-        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("polymath.json");
-        if (!Files.exists(cachePath) || !Files.isRegularFile(cachePath)) return;
+        if (!Files.exists(this.cacheFilePath) || !Files.isRegularFile(this.cacheFilePath)) return;
 
-        try (InputStream is = Files.newInputStream(cachePath)) {
+        try (InputStream is = Files.newInputStream(this.cacheFilePath)) {
             Map<String, String> cache = GsonHelper.parseJson(is);
 
             this.sha1 = cache.get("sha1");
@@ -56,11 +57,10 @@ public class PolymathHost implements ResourcePackHost {
         Map<String, String> cache = new HashMap<>();
         cache.put("sha1", this.sha1 != null ? this.sha1 : "");
         cache.put("url", this.url != null ? this.url : "");
-        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("polymath.json");
         try {
-            Files.createDirectories(cachePath.getParent());
+            Files.createDirectories(this.cacheFilePath.getParent());
             Files.writeString(
-                    cachePath,
+                    this.cacheFilePath,
                     GsonHelper.toJson(cache),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING
@@ -147,13 +147,16 @@ public class PolymathHost implements ResourcePackHost {
     private static class Factory implements ResourcePackHostFactory<PolymathHost> {
         private static final String[] USE_ENVIRONMENT_VARIABLES = new String[]{"use_environment_variables", "use-environment-variables"};
         private static final String[] SERVER_URL = new String[]{"server_url", "server-url"};
+        private static final String[] CACHE_FILE_NAME = new String[] {"cache_file_name", "cache-file-name"};
 
         @Override
         public PolymathHost create(ConfigSection section) {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String serverUrl = section.getNonEmptyString(SERVER_URL);
             String secret = useEnv ? getNonNullEnvironmentVariable(section, "CE_POLYMATH_SECRET") : section.getNonEmptyString("secret");
-            return new PolymathHost(serverUrl, secret);
+            Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
+                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "polymath.json"));
+            return new PolymathHost(serverUrl, secret, cacheFilePath);
         }
     }
 }

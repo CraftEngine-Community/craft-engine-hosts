@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
-public class GitHubHost implements ResourcePackHost {
+public final class GitHubHost implements ResourcePackHost {
     public static final ResourcePackHostFactory<GitHubHost> FACTORY = new Factory();
     private static final String GITHUB_API = "https://api.github.com";
     private final String owner;
@@ -31,15 +31,17 @@ public class GitHubHost implements ResourcePackHost {
     private final String token;
     private final String branch;
     private final String uploadPath;
+    private final Path cacheFilePath;
     private String cachedSha1;
     private String downloadUrl;
 
-    public GitHubHost(String owner, String repo, String token, String branch, String uploadPath) {
+    private GitHubHost(String owner, String repo, String token, String branch, String uploadPath, Path cacheFilePath) {
         this.owner = owner;
         this.repo = repo;
         this.token = token;
         this.branch = branch;
         this.uploadPath = uploadPath;
+        this.cacheFilePath = cacheFilePath;
         this.readCacheFromDisk();
     }
 
@@ -121,10 +123,9 @@ public class GitHubHost implements ResourcePackHost {
     }
 
     private void readCacheFromDisk() {
-        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("github.json");
-        if (!Files.exists(cachePath) || !Files.isRegularFile(cachePath)) return;
+        if (!Files.exists(this.cacheFilePath) || !Files.isRegularFile(this.cacheFilePath)) return;
 
-        try (InputStream is = Files.newInputStream(cachePath)) {
+        try (InputStream is = Files.newInputStream(this.cacheFilePath)) {
             Map<String, String> cache = GsonHelper.parseJson(is);
 
             this.cachedSha1 = cache.get("sha1");
@@ -138,11 +139,10 @@ public class GitHubHost implements ResourcePackHost {
         Map<String, String> cache = new HashMap<>();
         cache.put("sha1", this.cachedSha1 != null ? this.cachedSha1 : "");
         cache.put("download_url", this.downloadUrl != null ? this.downloadUrl : "");
-        Path cachePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache").resolve("github.json");
         try {
-            Files.createDirectories(cachePath.getParent());
+            Files.createDirectories(this.cacheFilePath.getParent());
             Files.writeString(
-                    cachePath,
+                    this.cacheFilePath,
                     GsonHelper.toJson(cache),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING
@@ -164,6 +164,7 @@ public class GitHubHost implements ResourcePackHost {
 
     private static class Factory implements ResourcePackHostFactory<GitHubHost> {
         private static final String[] USE_ENVIRONMENT_VARIABLES = new String[]{"use_environment_variables", "use-environment-variables"};
+        private static final String[] CACHE_FILE_NAME = new String[] {"cache_file_name", "cache-file-name"};
 
         @Override
         public GitHubHost create(ConfigSection section) {
@@ -173,7 +174,9 @@ public class GitHubHost implements ResourcePackHost {
             String token = useEnv ? getNonNullEnvironmentVariable(section, "CE_GITHUB_TOKEN") : section.getNonEmptyString("token");
             String branch = section.getValue("branch", ConfigValue::getAsNonEmptyString, "main");
             String uploadPath = section.getNonEmptyString("path");
-            return new GitHubHost(owner, repo, token, branch, uploadPath);
+            Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
+                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "github.json"));
+            return new GitHubHost(owner, repo, token, branch, uploadPath, cacheFilePath);
         }
     }
 }
