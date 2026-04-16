@@ -26,15 +26,16 @@ import java.util.logging.Level;
 
 public final class EdgeOnePagesHost implements ResourcePackHost {
     public static final ResourcePackHostFactory<EdgeOnePagesHost> FACTORY = new Factory();
-    private static final String EDGEONE_PAGES_API = "https://pages-api.cloud.tencent.com/v1";
     private final String url;
+    private final String endpoint;
     private final String apiToken;
     private final String projectId;
     private final Path cacheFilePath;
     private String cachedSha1;
 
-    public EdgeOnePagesHost(String url, String apiToken, String projectId, Path cacheFilePath) {
+    public EdgeOnePagesHost(String url, String endpoint, String apiToken, String projectId, Path cacheFilePath) {
         this.url = url;
+        this.endpoint = endpoint;
         this.apiToken = apiToken;
         this.projectId = projectId;
         this.cacheFilePath = cacheFilePath;
@@ -55,8 +56,8 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
             this.saveCacheToDisk();
             try {
                 byte[] fileData = Files.readAllBytes(resourcePackPath);
-                String objectKey = uploadToCos(this.apiToken, this.projectId, fileData);
-                createAndWait(this.apiToken, projectId, objectKey);
+                String objectKey = uploadToCos(this.endpoint, this.apiToken, this.projectId, fileData);
+                createAndWait(this.endpoint, this.apiToken, this.projectId, objectKey);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -73,10 +74,10 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         return ResourcePackHosts.EDGEONE_PAGES;
     }
 
-    private static String uploadToCos(String token, String projectId, byte[] fileData) throws Exception {
+    private static String uploadToCos(String endpoint, String token, String projectId, byte[] fileData) throws Exception {
         JsonObject reqData = new JsonObject();
         reqData.addProperty("ProjectId", projectId);
-        JsonObject resp = callApi(token, "DescribePagesCosTempToken", reqData);
+        JsonObject resp = callApi(endpoint, token, "DescribePagesCosTempToken", reqData);
 
         if (!resp.has("Credentials") || !resp.has("Bucket") || !resp.has("Region") || !resp.has("TargetPath")) {
             throw new RuntimeException("Failed to obtain COS temporary credentials, response: " + resp);
@@ -121,7 +122,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         return objectKey;
     }
 
-    private static void createAndWait(String token, String projectId, String objectKey) throws Exception {
+    private static void createAndWait(String endpoint, String token, String projectId, String objectKey) throws Exception {
         JsonObject createReq = new JsonObject();
         createReq.addProperty("ProjectId", projectId);
         createReq.addProperty("ViaMeta", "Upload");
@@ -131,7 +132,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         createReq.addProperty("TempBucketPath", objectKey);
         createReq.addProperty("BuildFrom", "CLI");
 
-        JsonObject createResp = callApi(token, "CreatePagesDeployment", createReq);
+        JsonObject createResp = callApi(endpoint, token, "CreatePagesDeployment", createReq);
         if (!createResp.has("DeploymentId")) {
             throw new RuntimeException("Failed to create deployment, response: " + createResp);
         }
@@ -149,7 +150,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         @SuppressWarnings("resource")
         ScheduledFuture<?> future = CraftEngineHosts.instance().scheduler().scheduleWithFixedDelay(() -> {
             try {
-                JsonObject body = callApi(token, "DescribePagesDeployments", pollReq);
+                JsonObject body = callApi(endpoint, token, "DescribePagesDeployments", pollReq);
                 if (!body.has("Deployments")) {
                     throw new RuntimeException("Failed to query deployment list, response: " + body);
                 }
@@ -231,7 +232,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         return new String[]{authorization, url};
     }
 
-    private static JsonObject callApi(String token, String action, JsonObject data) throws Exception {
+    private static JsonObject callApi(String endpoint, String token, String action, JsonObject data) throws Exception {
         JsonObject payload = new JsonObject();
         payload.addProperty("Action", action);
         for (Map.Entry<String, JsonElement> entry : data.entrySet()) {
@@ -239,7 +240,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         }
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(EDGEONE_PAGES_API))
+                .uri(URI.create(endpoint))
                 .header("Authorization", "Bearer " + token)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(GsonHelper.toJson(payload)))
@@ -301,15 +302,20 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         private static final String[] API_TOKEN = new String[]{"api_token", "api-token"};
         private static final String[] PROJECT_ID = new String[]{"project_id", "project-id"};
         private static final String[] CACHE_FILE_NAME = new String[] {"cache_file_name", "cache-file-name"};
+        private static final String[] IS_INTERNATIONAL = new String[] {"is_international", "is-international"};
 
         @Override
         public EdgeOnePagesHost create(ConfigSection section) {
             String url = section.getNonEmptyString("url");
+            String endpoint = section.getBoolean(IS_INTERNATIONAL) ? "https://pages-api.edgeone.ai/v1" : "https://pages-api.cloud.tencent.com/v1";
+            if (section.containsKey("endpoint")) {
+                endpoint = section.getNonEmptyString("endpoint");
+            }
             String apiToken = section.getNonEmptyString(API_TOKEN);
             String projectId = section.getNonEmptyString(PROJECT_ID);
             Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
                     .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "edgeone_pages.json"));
-            return new EdgeOnePagesHost(url, apiToken, projectId, cacheFilePath);
+            return new EdgeOnePagesHost(url, endpoint, apiToken, projectId, cacheFilePath);
         }
     }
 }
