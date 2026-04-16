@@ -1,5 +1,6 @@
 package cn.gtemc.craftengine.hosts;
 
+import cn.gtemc.craftengine.hosts.impl.EdgeOnePagesHost;
 import cn.gtemc.craftengine.hosts.impl.GitHubHost;
 import cn.gtemc.craftengine.hosts.impl.GiteeHost;
 import cn.gtemc.craftengine.hosts.impl.PolymathHost;
@@ -16,6 +17,7 @@ public class ResourcePackHosts {
     public static final ResourcePackHostType<GitHubHost> GITHUB = register(Key.of("gtemc:github"), GitHubHost.FACTORY);
     public static final ResourcePackHostType<GiteeHost> GITEE = register(Key.of("gtemc:gitee"), GiteeHost.FACTORY);
     public static final ResourcePackHostType<PolymathHost> POLYMATH = register(Key.of("gtemc:polymath"), PolymathHost.FACTORY);
+    public static final ResourcePackHostType<EdgeOnePagesHost> EDGEONE_PAGES = register(Key.of("gtemc:edgeone_pages"), EdgeOnePagesHost.FACTORY);
 
     public static void init() {
     }

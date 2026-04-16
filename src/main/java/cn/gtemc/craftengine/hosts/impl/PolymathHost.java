@@ -3,7 +3,7 @@ package cn.gtemc.craftengine.hosts.impl;
 import cn.gtemc.craftengine.CraftEngineHosts;
 import cn.gtemc.craftengine.hosts.ResourcePackHosts;
 import cn.gtemc.craftengine.util.GsonHelper;
-import cn.gtemc.craftengine.util.HashUtils;
+import cn.gtemc.craftengine.util.MiscUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -80,7 +80,7 @@ public final class PolymathHost implements ResourcePackHost {
     public CompletableFuture<Void> upload(Path resourcePackPath) {
         return CompletableFuture.runAsync(() -> {
             try {
-                this.sha1 = HashUtils.calculateLocalFileSha1(resourcePackPath);
+                this.sha1 = MiscUtils.calculateLocalFileSha1(resourcePackPath);
                 this.uuid = generateUUID(this.sha1);
                 this.saveCacheToDisk();
                 String boundary = UUID.randomUUID().toString();

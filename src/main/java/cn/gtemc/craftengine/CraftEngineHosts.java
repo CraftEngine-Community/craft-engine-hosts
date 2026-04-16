@@ -5,14 +5,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 
 public final class CraftEngineHosts extends JavaPlugin {
     private static CraftEngineHosts instance;
+    private ScheduledExecutorService scheduler;
 
     @Override
     public void onLoad() {
         instance = this;
+        this.scheduler = Executors.newSingleThreadScheduledExecutor();
         ResourcePackHosts.init();
         getLogger().info("CraftEngine Hosts Extensions Loaded");
     }
@@ -27,6 +31,15 @@ public final class CraftEngineHosts extends JavaPlugin {
             }
         }
         return path;
+    }
+
+    @Override
+    public void onDisable() {
+        if (this.scheduler != null) this.scheduler.shutdown();
+    }
+
+    public ScheduledExecutorService scheduler() {
+        return this.scheduler;
     }
 
     public static CraftEngineHosts instance() {

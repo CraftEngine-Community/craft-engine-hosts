@@ -3,7 +3,7 @@ package cn.gtemc.craftengine.hosts.impl;
 import cn.gtemc.craftengine.CraftEngineHosts;
 import cn.gtemc.craftengine.hosts.ResourcePackHosts;
 import cn.gtemc.craftengine.util.GsonHelper;
-import cn.gtemc.craftengine.util.HashUtils;
+import cn.gtemc.craftengine.util.MiscUtils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.momirealms.craftengine.core.pack.host.*;
@@ -55,7 +55,7 @@ public final class GiteeHost implements ResourcePackHost {
     public CompletableFuture<Void> upload(Path resourcePackPath) {
         return CompletableFuture.runAsync(() -> {
             try {
-                this.cachedSha1 = HashUtils.calculateLocalFileSha1(resourcePackPath);
+                this.cachedSha1 = MiscUtils.calculateLocalFileSha1(resourcePackPath);
                 this.saveCacheToDisk();
 
                 String sha = null;
