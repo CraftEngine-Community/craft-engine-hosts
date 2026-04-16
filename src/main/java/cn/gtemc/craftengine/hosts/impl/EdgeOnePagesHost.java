@@ -136,7 +136,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
             throw new RuntimeException("Failed to create deployment, response: " + createResp);
         }
         String deploymentId = createResp.get("DeploymentId").getAsString();
-        CraftEngineHosts.instance().getLogger().info("Deployment created, DeploymentId" + deploymentId + ", waiting for completion...");
+        CraftEngineHosts.instance().getLogger().info("Deployment created, DeploymentId=" + deploymentId + ", waiting for completion...");
 
         JsonObject pollReq = new JsonObject();
         pollReq.addProperty("ProjectId", projectId);
