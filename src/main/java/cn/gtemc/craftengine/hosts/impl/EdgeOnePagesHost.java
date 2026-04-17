@@ -299,6 +299,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
     }
 
     private static class Factory implements ResourcePackHostFactory<EdgeOnePagesHost> {
+        private static final String[] USE_ENVIRONMENT_VARIABLES = new String[]{"use_environment_variables", "use-environment-variables"};
         private static final String[] API_TOKEN = new String[]{"api_token", "api-token"};
         private static final String[] PROJECT_ID = new String[]{"project_id", "project-id"};
         private static final String[] CACHE_FILE_NAME = new String[] {"cache_file_name", "cache-file-name"};
@@ -306,12 +307,13 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
 
         @Override
         public EdgeOnePagesHost create(ConfigSection section) {
+            boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String url = section.getNonEmptyString("url");
             String endpoint = section.getBoolean(IS_INTERNATIONAL) ? "https://pages-api.edgeone.ai/v1" : "https://pages-api.cloud.tencent.com/v1";
             if (section.containsKey("endpoint")) {
                 endpoint = section.getNonEmptyString("endpoint");
             }
-            String apiToken = section.getNonEmptyString(API_TOKEN);
+            String apiToken = useEnv ? getNonNullEnvironmentVariable(section, "CE_EDGEONE_PAGES_API_TOKEN") : section.getNonEmptyString(API_TOKEN);
             String projectId = section.getNonEmptyString(PROJECT_ID);
             Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
                     .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "edgeone_pages.json"));

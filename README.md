@@ -43,3 +43,16 @@ use-environment-variables: false
 ```
 > [!TIP]
 > Available environment variables: CE_POLYMATH_SECRET
+
+### edgeone pages example
+
+```yml
+type: "gtemc:edgeone_pages"
+is_international: false # If you are using the international version, please enable this option
+# endpoint: "https://your_endpoint/v1" # Optional
+api_token: "your_api_token" # https://pages.edgeone.ai/document/api-token / https://cloud.tencent.com/document/product/1552/127422 
+project_id: "pages-xxxx" # On the project overview page, in the address bar: .../pages/project/pages-xxxx/... (where "pages-xxxx" is the specific page ID)
+use-environment-variables: false
+```
+> [!TIP]
+> Available environment variables: CE_EDGEONE_PAGES_API_TOKEN
