@@ -14,7 +14,7 @@ owner: "your_owner_name"
 repo: "your_repo_name" # https://gitee.com/projects/new
 token: "your_token" # https://gitee.com/profile/personal_access_tokens/new
 path: "resourcepacks/resource_pack.zip"
-use-environment-variables: false
+use_environment_variables: false
 ```
 > [!TIP]
 > Available environment variables: CE_GITEE_TOKEN
@@ -28,7 +28,7 @@ repo: "your_repo_name" # https://github.com/new
 token: "your_token" # https://github.com/settings/tokens/new
 branch: "main"
 path: "resourcepacks/resource_pack.zip"
-use-environment-variables: false
+use_environment_variables: false
 ```
 > [!TIP]
 > Available environment variables: CE_GITHUB_TOKEN
@@ -39,7 +39,7 @@ use-environment-variables: false
 type: "gtemc:polymath"
 server-url: "https://your_server_url/upload"
 secret: "your_secret"
-use-environment-variables: false
+use_environment_variables: false
 ```
 > [!TIP]
 > Available environment variables: CE_POLYMATH_SECRET
@@ -52,7 +52,7 @@ is_international: false # If you are using the international version, please ena
 # endpoint: "https://your_endpoint/v1" # Optional
 api_token: "your_api_token" # https://pages.edgeone.ai/document/api-token / https://cloud.tencent.com/document/product/1552/127422 
 project_id: "pages-xxxx" # On the project overview page, in the address bar: .../pages/project/pages-xxxx/... (where "pages-xxxx" is the specific page ID)
-use-environment-variables: false
+use_environment_variables: false
 ```
 > [!TIP]
 > Available environment variables: CE_EDGEONE_PAGES_API_TOKEN
