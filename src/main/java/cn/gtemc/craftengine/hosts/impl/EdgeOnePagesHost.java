@@ -309,9 +309,11 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         public EdgeOnePagesHost create(ConfigSection section) {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String url = section.getNonEmptyString("url");
-            String endpoint = section.getBoolean(IS_INTERNATIONAL) ? "https://pages-api.edgeone.ai/v1" : "https://pages-api.cloud.tencent.com/v1";
+            String endpoint;
             if (section.containsKey("endpoint")) {
                 endpoint = section.getNonEmptyString("endpoint");
+            } else {
+                endpoint = section.getBoolean(IS_INTERNATIONAL) ? "https://pages-api.edgeone.ai/v1" : "https://pages-api.cloud.tencent.com/v1";
             }
             String apiToken = useEnv ? getNonNullEnvironmentVariable(section, "CE_EDGEONE_PAGES_API_TOKEN") : section.getNonEmptyString(API_TOKEN);
             String projectId = section.getNonEmptyString(PROJECT_ID);
