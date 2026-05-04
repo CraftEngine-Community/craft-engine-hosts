@@ -2,7 +2,7 @@ import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
 plugins {
     id("java")
-    id("com.gradleup.shadow") version "9.3.2"
+    id("com.gradleup.shadow") version "9.4.1"
     id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
 }
 
