@@ -32,6 +32,13 @@ public final class GsonHelper {
         );
     }
 
+    public static Map<String, String> parseJson(String s) {
+        return get().fromJson(
+                s,
+                new TypeToken<Map<String, String>>(){}.getType()
+        );
+    }
+
     public static String toJson(Object obj) {
         return get().toJson(obj);
     }

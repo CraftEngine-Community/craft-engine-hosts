@@ -56,3 +56,18 @@ use_environment_variables: false
 ```
 > [!TIP]
 > Available environment variables: CE_EDGEONE_PAGES_API_TOKEN
+
+
+### edgeone pages blob example
+
+For more information, visit https://github.com/jhqwqmc/eopage-file-host
+
+```yml
+type: "gtemc:edgeone_pages_blob"
+api_url: "https://your_api_url"
+api_secret: "your_api_secret"
+store_path: "your_store_path"
+use_environment_variables: false
+```
+> [!TIP]
+> Available environment variables: CE_EDGEONE_PAGES_BLOB_API_SECRET
