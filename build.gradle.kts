@@ -15,9 +15,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:${rootProject.properties["paper_version"]}-R0.1-SNAPSHOT")
-    compileOnly("net.momirealms:craft-engine-core:${rootProject.properties["craftengine_version"]}")
-    compileOnly("com.google.code.gson:gson:${rootProject.properties["gson_version"]}")
+    compileOnly("io.papermc.paper:paper-api:${rootProject.findProperty("paper_version")}-R0.1-SNAPSHOT")
+    compileOnly("net.momirealms:craft-engine-core:${rootProject.findProperty("craftengine_version")}")
+    compileOnly("com.google.code.gson:gson:${rootProject.findProperty("gson_version")}")
 }
 
 java {
@@ -36,7 +36,7 @@ tasks.withType<JavaCompile> {
 
 bukkit {
     main = "cn.gtemc.craftengine.CraftEngineHosts"
-    version = rootProject.properties["project_version"] as String
+    version = rootProject.findProperty("project_version") as String
     name = "CraftEngineHosts"
     apiVersion = "1.20"
     load = BukkitPluginDescription.PluginLoadOrder.STARTUP
@@ -52,7 +52,7 @@ artifacts {
 
 tasks {
     shadowJar {
-        archiveFileName = "${rootProject.name}-${rootProject.properties["project_version"]}.jar"
+        archiveFileName = "${rootProject.name}-${rootProject.findProperty("project_version")}.jar"
         destinationDirectory.set(file("$rootDir/target"))
     }
 }
