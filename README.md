@@ -37,7 +37,7 @@ use_environment_variables: false
 
 ```yml
 type: "gtemc:polymath"
-server-url: "https://your_server_url/upload"
+server_url: "https://your_server_url/upload"
 secret: "your_secret"
 use_environment_variables: false
 ```
@@ -71,3 +71,14 @@ use_environment_variables: false
 ```
 > [!TIP]
 > Available environment variables: CE_EDGEONE_PAGES_BLOB_API_SECRET
+
+### hermes example
+
+```yml
+type: "gtemc:hermes"
+server_url: "https://your_server_url/"
+secret: "your_secret"
+use_environment_variables: false
+```
+> [!TIP]
+> Available environment variables: CE_HERMES_SECRET
