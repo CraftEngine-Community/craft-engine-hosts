@@ -16,6 +16,7 @@ public class ResourcePackHosts {
     public static final ResourcePackHostType<PolymathHost> POLYMATH = register(Key.of("gtemc:polymath"), PolymathHost.FACTORY);
     public static final ResourcePackHostType<EdgeOnePagesHost> EDGEONE_PAGES = register(Key.of("gtemc:edgeone_pages"), EdgeOnePagesHost.FACTORY);
     public static final ResourcePackHostType<EdgeOnePagesBlobHost> EDGEONE_PAGES_BLOB = register(Key.of("gtemc:edgeone_pages_blob"), EdgeOnePagesBlobHost.FACTORY);
+    public static final ResourcePackHostType<HermesHost> HERMES = register(Key.of("gtemc:hermes"), HermesHost.FACTORY);
 
     public static void init() {
     }
