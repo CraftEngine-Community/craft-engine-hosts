@@ -4,6 +4,7 @@ import cn.gtemc.craftengine.CraftEngineHosts;
 import cn.gtemc.craftengine.hosts.ResourcePackHosts;
 import cn.gtemc.craftengine.util.GsonHelper;
 import cn.gtemc.craftengine.util.MiscUtils;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.momirealms.craftengine.core.pack.host.*;
@@ -71,8 +72,13 @@ public final class GiteeHost implements ResourcePackHost {
                 HttpResponse<String> checkResponse = HttpClientManager.get().send(checkRequest, HttpResponse.BodyHandlers.ofString());
 
                 if (checkResponse.statusCode() == 200 || checkResponse.statusCode() == 201) {
-                    JsonObject existingFile = JsonParser.parseString(checkResponse.body()).getAsJsonObject();
-                    sha = existingFile.get("sha").getAsString();
+                    JsonElement jsonElement = JsonParser.parseString(checkResponse.body());
+                    if (jsonElement.isJsonObject()) {
+                        JsonObject existingFile = jsonElement.getAsJsonObject();
+                        if (existingFile.has("sha")) {
+                            sha = existingFile.get("sha").getAsString();
+                        }
+                    }
                 }
 
                 byte[] fileContent = Files.readAllBytes(resourcePackPath);
@@ -84,18 +90,20 @@ public final class GiteeHost implements ResourcePackHost {
                 JsonObject uploadBody = new JsonObject();
                 uploadBody.addProperty("message", "Upload resource pack");
                 uploadBody.addProperty("content", contentBase64);
-                if (sha != null) {
-                    uploadBody.addProperty("sha", sha);
-                }
 
-                HttpRequest uploadRequest = HttpRequest.newBuilder()
+                HttpRequest.Builder uploadRequest = HttpRequest.newBuilder()
                         .uri(URI.create(uploadUrl))
                         .header("Authorization", "token " + token)
-                        .header("Content-Type", "application/json")
-                        .PUT(HttpRequest.BodyPublishers.ofString(uploadBody.toString()))
-                        .build();
+                        .header("Content-Type", "application/json");
 
-                HttpResponse<String> uploadResponse = HttpClientManager.get().send(uploadRequest, HttpResponse.BodyHandlers.ofString());
+                if (sha != null) {
+                    uploadBody.addProperty("sha", sha);
+                    uploadRequest.PUT(HttpRequest.BodyPublishers.ofString(uploadBody.toString()));
+                } else {
+                    uploadRequest.POST(HttpRequest.BodyPublishers.ofString(uploadBody.toString()));
+                }
+
+                HttpResponse<String> uploadResponse = HttpClientManager.get().send(uploadRequest.build(), HttpResponse.BodyHandlers.ofString());
 
                 if (uploadResponse.statusCode() == 200 || uploadResponse.statusCode() == 201) {
                     JsonObject responseJson = JsonParser.parseString(uploadResponse.body()).getAsJsonObject();
