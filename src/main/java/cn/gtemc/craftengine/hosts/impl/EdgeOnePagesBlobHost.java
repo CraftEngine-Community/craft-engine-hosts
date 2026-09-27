@@ -117,13 +117,13 @@ public final class EdgeOnePagesBlobHost implements ResourcePackHost {
         private static final String[] STORE_PATH = new String[]{"store_path", "store-path"};
 
         @Override
-        public EdgeOnePagesBlobHost create(ConfigSection section) {
+        public EdgeOnePagesBlobHost create(String id, ConfigSection section) {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String apiUrl = section.getNonEmptyString(API_URL);
             String apiSecret = useEnv ? getNonNullEnvironmentVariable(section, "CE_EDGEONE_PAGES_BLOB_API_SECRET") : section.getNonEmptyString(API_SECRET);
             String storePath = section.getValue(STORE_PATH, ConfigValue::getAsNonEmptyString, "resource_pack.zip");
             Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
-                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "edgeone_pages_blob.json"));
+                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "edgeone_pages_blob_" + id + ".json"));
             return new EdgeOnePagesBlobHost(apiUrl, apiSecret, storePath, cacheFilePath);
         }
     }

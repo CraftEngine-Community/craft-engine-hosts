@@ -146,12 +146,12 @@ public final class PolymathHost implements ResourcePackHost {
         private static final String[] CACHE_FILE_NAME = new String[] {"cache_file_name", "cache-file-name"};
 
         @Override
-        public PolymathHost create(ConfigSection section) {
+        public PolymathHost create(String id, ConfigSection section) {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String serverUrl = section.getNonEmptyString(SERVER_URL);
             String secret = useEnv ? getNonNullEnvironmentVariable(section, "CE_POLYMATH_SECRET") : section.getNonEmptyString("secret");
             Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
-                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "polymath.json"));
+                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "polymath_" + id + ".json"));
             return new PolymathHost(serverUrl, secret, cacheFilePath);
         }
     }

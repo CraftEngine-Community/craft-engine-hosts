@@ -161,7 +161,7 @@ public final class GitHubHost implements ResourcePackHost {
         private static final String[] CACHE_FILE_NAME = new String[] {"cache_file_name", "cache-file-name"};
 
         @Override
-        public GitHubHost create(ConfigSection section) {
+        public GitHubHost create(String id, ConfigSection section) {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String owner = section.getNonEmptyString("owner");
             String repo = section.getNonEmptyString("repo");
@@ -169,7 +169,7 @@ public final class GitHubHost implements ResourcePackHost {
             String branch = section.getValue("branch", ConfigValue::getAsNonEmptyString, "main");
             String uploadPath = section.getNonEmptyString("path");
             Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
-                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "github.json"));
+                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "github_" + id + ".json"));
             return new GitHubHost(owner, repo, token, branch, uploadPath, cacheFilePath);
         }
     }

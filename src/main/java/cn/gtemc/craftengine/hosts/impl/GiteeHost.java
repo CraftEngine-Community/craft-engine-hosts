@@ -155,14 +155,14 @@ public final class GiteeHost implements ResourcePackHost {
         private static final String[] CACHE_FILE_NAME = new String[] {"cache_file_name", "cache-file-name"};
 
         @Override
-        public GiteeHost create(ConfigSection section) {
+        public GiteeHost create(String id, ConfigSection section) {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String owner = section.getNonEmptyString("owner");
             String repo = section.getNonEmptyString("repo");
             String token = useEnv ? getNonNullEnvironmentVariable(section, "CE_GITEE_TOKEN") : section.getNonEmptyString("token");
             String uploadPath = section.getNonEmptyString("path");
             Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
-                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "gitee.json"));
+                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "gitee_" + id + ".json"));
             return new GiteeHost(owner, repo, token, uploadPath, cacheFilePath);
         }
     }

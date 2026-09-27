@@ -306,7 +306,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
         private static final String[] IS_INTERNATIONAL = new String[] {"is_international", "is-international"};
 
         @Override
-        public EdgeOnePagesHost create(ConfigSection section) {
+        public EdgeOnePagesHost create(String id, ConfigSection section) {
             boolean useEnv = section.getBoolean(USE_ENVIRONMENT_VARIABLES);
             String url = section.getNonEmptyString("url");
             String endpoint;
@@ -318,7 +318,7 @@ public final class EdgeOnePagesHost implements ResourcePackHost {
             String apiToken = useEnv ? getNonNullEnvironmentVariable(section, "CE_EDGEONE_PAGES_API_TOKEN") : section.getNonEmptyString(API_TOKEN);
             String projectId = section.getNonEmptyString(PROJECT_ID);
             Path cacheFilePath = CraftEngineHosts.instance().dataFolderPath().resolve("cache")
-                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "edgeone_pages.json"));
+                    .resolve(section.getValue(CACHE_FILE_NAME, it -> it.getAsNonEmptyString().replace("/", "_"), "edgeone_pages_" + id + ".json"));
             return new EdgeOnePagesHost(url, endpoint, apiToken, projectId, cacheFilePath);
         }
     }
